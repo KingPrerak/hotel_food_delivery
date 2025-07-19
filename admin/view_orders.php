@@ -21,7 +21,7 @@ if (isset($_GET['delete']) && isset($_GET['id'])) {
   $conn->query("DELETE FROM orders WHERE id=$id");
 }
 
-// ✅ Fetch orders + user
+// ✅ Fetch orders + user name
 $sql = "
   SELECT orders.*, users.name AS customer_name 
   FROM orders
@@ -41,7 +41,7 @@ $result = $conn->query($sql);
 </head>
 <body class="bg-light">
 
-<!-- ✅ Simple admin navbar for quick nav -->
+<!-- ✅ Admin Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
   <div class="container">
     <a class="navbar-brand" href="index.php">Admin Dashboard</a>
@@ -78,7 +78,26 @@ $result = $conn->query($sql);
           <td><?= $order['id'] ?></td>
           <td><?= htmlspecialchars($order['customer_name']) ?></td>
           <td><?= htmlspecialchars($order['address']) ?></td>
-          <td><?= htmlspecialchars($order['items']) ?></td>
+
+          <!-- ✅ Correct way: Fetch order items for each order -->
+          <td>
+            <ul class="mb-0">
+              <?php
+              $orderId = intval($order['id']);
+              $itemsSql = "
+                SELECT oi.*, f.name 
+                FROM order_items oi 
+                JOIN food_items f ON oi.food_id = f.id 
+                WHERE oi.order_id = $orderId
+              ";
+              $itemsResult = $conn->query($itemsSql);
+              while ($item = $itemsResult->fetch_assoc()):
+              ?>
+                <li><?= htmlspecialchars($item['name']) ?> x <?= $item['quantity'] ?> (₹<?= $item['price'] ?> each)</li>
+              <?php endwhile; ?>
+            </ul>
+          </td>
+
           <td>Rs. <?= $order['total'] ?></td>
           <td>
             <?php if ($order['status'] == 'pending'): ?>
